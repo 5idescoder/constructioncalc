@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --gradient-start: #2b1717;
+  --gradient-mid: #1a0f0f;
+  --gradient-end: #8b0000;
+}
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-mid) 50%, var(--gradient-end) 100%);
+}
+
+canvas {
+  touch-action: none;
+}
+
+.gradient-bg {
+  background: linear-gradient(135deg, #2c3e50 0%, #3d4f61 100%);
+}
+
+.metallic-border {
+  border: 1px solid;
+  border-image: linear-gradient(to right, #C0C0C0, #FFD700) 1;
+}
+
+.input-dark {
+  @apply bg-gray-800 border-gray-700 text-gray-200 placeholder-gray-500;
+}
+
+.input-dark:focus {
+  @apply border-red-800 ring-1 ring-red-800;
+}

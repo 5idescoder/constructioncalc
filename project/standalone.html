@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MetaTims Construction Calculator</title>
+  <script async src="https://unpkg.com/es-module-shims@1.8.0/dist/es-module-shims.js"></script>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.162.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.162.0/examples/jsm/"
+      }
+    }
+  </script>
+  <style>
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #2b1717 0%, #1a0f0f 50%, #8b0000 100%);
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    .calculator {
+      background: #1a1a1a;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      color: #e5e7eb;
+      border: 1px solid rgba(139, 0, 0, 0.2);
+      overflow: hidden;
+    }
+
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid rgba(139, 0, 0, 0.2);
+    }
+
+    .tab {
+      flex: 1;
+      padding: 1rem;
+      text-align: center;
+      cursor: pointer;
+      color: #9ca3af;
+      transition: all 0.3s ease;
+    }
+
+    .tab:hover {
+      color: #e5e7eb;
+    }
+
+    .tab.active {
+      border-bottom: 2px solid #8b0000;
+      color: #dc2626;
+    }
+
+    .tab-content {
+      display: none;
+      padding: 2rem;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .title {
+      font-size: 2rem;
+      font-weight: bold;
+      margin-bottom: 1.5rem;
+      text-align: center;
+      color: #e5e7eb;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .section-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin: 1.5rem 0 1rem;
+      color: #dc2626;
+    }
+
+    .input-group {
+      margin-bottom: 1rem;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .input-row .input-group {
+      flex: 1;
+      margin-bottom: 0;
+    }
+
+    .label {
+      display: block;
+      font-size: 0.875rem;
+      margin-bottom: 0.5rem;
+      color: #e5e7eb;
+    }
+
+    .input {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #4b5563;
+      border-radius: 0.5rem;
+      background: #374151;
+      color: #e5e7eb;
+      transition: all 0.3s ease;
+    }
+
+    .input:focus {
+      outline: none;
+      border-color: #8b0000;
+      box-shadow: 0 0 0 2px rgba(139, 0, 0, 0.2);
+    }
+
+    .button {
+      width: 100%;
+      padding: 0.875rem;
+      background: #8b0000;
+      color: #e5e7eb;
+      border: none;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 1.5rem;
+    }
+
+    .button:hover {
+      background: #a52a2a;
+    }
+
+    .results {
+      margin-top: 2rem;
+      padding: 1.5rem;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 0.5rem;
+      display: none;
+    }
+
+    .results.active {
+      display: block;
+    }
+
+    .results-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #dc2626;
+      margin-bottom: 1rem;
+    }
+
+    .results-item {
+      margin-bottom: 1rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid rgba(139, 0, 0, 0.2);
+    }
+
+    .results-item:last-child {
+      border-bottom: none;
+    }
+
+    .total-cost {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #dc2626;
+      margin-top: 1rem;
+    }
+
+    #preview-container {
+      width: 100%;
+      height: 600px;
+      background: #1a1a1a;
+      border-radius: 0.5rem;
+      overflow: hidden;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="calculator">
+      <div class="tabs">
+        <div class="tab active" data-tab="calculator">Calculator</div>
+        <div class="tab" data-tab="preview">3D Preview</div>
+      </div>
+
+      <div id="calculator" class="tab-content active">
+        <h1 class="title">MetaTims Construction Calculator</h1>
+        
+        <div class="section-title">Room Dimensions</div>
+        <div class="input-row">
+          <div class="input-group">
+            <label class="label">Length (feet)</label>
+            <input type="number" id="length" class="input" value="20" />
+          </div>
+          <div class="input-group">
+            <label class="label">Width (feet)</label>
+            <input type="number" id="width" class="input" value="20" />
+          </div>
+          <div class="input-group">
+            <label class="label">Height (feet)</label>
+            <input type="number" id="height" class="input" value="8" />
+          </div>
+        </div>
+
+        <div class="section-title">Material Lengths</div>
+        <div class="input-row">
+          <div class="input-group">
+            <label class="label">2×4 Stud/Plate Length (feet)</label>
+            <input type="number" id="studLength" class="input" value="8" step="0.5" />
+          </div>
+          <div class="input-group">
+            <label class="label">2×6 Beam Length (feet)</label>
+            <input type="number" id="beamLength" class="input" value="8" step="0.5" />
+          </div>
+        </div>
+
+        <div class="section-title">Material Prices ($ per piece)</div>
+        <div class="input-row">
+          <div class="input-group">
+            <label class="label">2×4 Price (Studs & Plates)</label>
+            <input type="number" id="studPrice" class="input" value="3.98" step="0.01" />
+          </div>
+          <div class="input-group">
+            <label class="label">2×6 Beam Price</label>
+            <input type="number" id="beamPrice" class="input" value="12.98" step="0.01" />
+          </div>
+          <div class="input-group">
+            <label class="label">Sheetrock Price</label>
+            <input type="number" id="sheetrockPrice" class="input" value="15.98" step="0.01" />
+          </div>
+        </div>
+
+        <button onclick="calculateMaterials()" class="button">Calculate Materials</button>
+
+        <div id="results" class="results">
+          <div class="results-title">Material Breakdown</div>
+          <div id="resultsList"></div>
+          <div id="totalCost" class="total-cost"></div>
+        </div>
+      </div>
+
+      <div id="preview" class="tab-content">
+        <div id="preview-container"></div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    let scene, camera, renderer, controls;
+
+    const COLORS = {
+      stud: new THREE.Color('#D2B48C'),    // Tan
+      beam: new THREE.Color('#8B4513'),    // Saddle Brown
+      plate: new THREE.Color('#DEB887'),   // Burlywood
+      joist: new THREE.Color('#A0522D')    // Sienna
+    };
+
+    const LUMBER_DIMENSIONS = {
+      stud: { width: 1.5, height: 3.5 },   // 2x4 (actual dimensions)
+      beam: { width: 1.5, height: 5.5 },   // 2x6 (actual dimensions)
+      plate: { width: 1.5, height: 3.5 },  // 2x4 (actual dimensions)
+      joist: { width: 1.5, height: 5.5 }   // 2x6 (actual dimensions)
+    };
+
+    function init() {
+      const container = document.getElementById('preview-container');
+      
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color('#1a1a1a');
+
+      const aspect = container.clientWidth / container.clientHeight;
+      camera = new THREE.PerspectiveCamera(50, aspect, 0.1, 1000);
+      camera.position.set(20, 20, 20);
+
+      renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(container.clientWidth, container.clientHeight);
+      container.innerHTML = '';
+      container.appendChild(renderer.domElement);
+
+      controls = new OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.05;
+
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+      scene.add(ambientLight);
+
+      const directionalLight1 = new THREE.DirectionalLight(0xffffff, 1);
+      directionalLight1.position.set(10, 10, 5);
+      scene.add(directionalLight1);
+
+      const directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.5);
+      directionalLight2.position.set(-10, -10, -5);
+      scene.add(directionalLight2);
+
+      window.addEventListener('resize', onWindowResize, false);
+      animate();
+      updatePreview();
+    }
+
+    function createLumber(position, rotation, dimensions, type) {
+      const geometry = new THREE.BoxGeometry(dimensions.x, dimensions.y, dimensions.z);
+      const material = new THREE.MeshStandardMaterial({
+        color: COLORS[type],
+        roughness: 0.8,
+        metalness: 0.1
+      });
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.position.copy(position);
+      mesh.rotation.setFromVector3(rotation);
+      return mesh;
+    }
+
+    function onWindowResize() {
+      const container = document.getElementById('preview-container');
+      camera.aspect = container.clientWidth / container.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(container.clientWidth, container.clientHeight);
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      if (controls) controls.update();
+      if (renderer && scene && camera) {
+        renderer.render(scene, camera);
+      }
+    }
+
+    function updatePreview() {
+      if (!scene) return;
+
+      while(scene.children.length > 0) { 
+        scene.remove(scene.children[0]); 
+      }
+
+      const length = parseFloat(document.getElementById('length').value) || 20;
+      const width = parseFloat(document.getElementById('width').value) || 20;
+      const height = parseFloat(document.getElementById('height').value) || 8;
+
+      const gridSize = Math.max(length, width) * 2;
+      const grid = new THREE.GridHelper(gridSize, gridSize);
+      scene.add(grid);
+
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+      scene.add(ambientLight);
+
+      const directionalLight1 = new THREE.DirectionalLight(0xffffff, 1);
+      directionalLight1.position.set(10, 10, 5);
+      scene.add(directionalLight1);
+
+      const directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.5);
+      directionalLight2.position.set(-10, -10, -5);
+      scene.add(directionalLight2);
+
+      // Add floor joists (2ft spacing)
+      const joistSpacing = 24; // 2 feet in inches
+      const joistCount = Math.ceil((length * 12) / joistSpacing) + 1;
+      for (let i = 0; i < joistCount; i++) {
+        const joist = createLumber(
+          new THREE.Vector3(
+            (i * joistSpacing - (length * 6)) / 12,
+            LUMBER_DIMENSIONS.joist.height / 24,
+            0
+          ),
+          new THREE.Vector3(0, 0, 0),
+          new THREE.Vector3(
+            LUMBER_DIMENSIONS.joist.width / 12,
+            LUMBER_DIMENSIONS.joist.height / 12,
+            width
+          ),
+          'joist'
+        );
+        scene.add(joist);
+      }
+
+      // Add wall studs (16" spacing)
+      const studSpacing = 16;
+      for (let wall = 0; wall < 4; wall++) {
+        const isLongWall = wall % 2 === 0;
+        const wallLength = isLongWall ? length : width;
+        const studCount = Math.ceil((wallLength * 12) / studSpacing) + 1;
+
+        for (let i = 0; i < studCount; i++) {
+          const x = isLongWall
+            ? i * (studSpacing / 12) - length / 2
+            : (wall === 1 ? width / 2 : -width / 2);
+          const z = isLongWall
+            ? (wall === 0 ? -width / 2 : width / 2)
+            : i * (studSpacing / 12) - width / 2;
+
+          const stud = createLumber(
+            new THREE.Vector3(x, height / 2, z),
+            new THREE.Vector3(0, isLongWall ? 0 : Math.PI / 2, 0),
+            new THREE.Vector3(
+              LUMBER_DIMENSIONS.stud.width / 12,
+              height,
+              LUMBER_DIMENSIONS.stud.height / 12
+            ),
+            'stud'
+          );
+          scene.add(stud);
+        }
+      }
+
+      // Add plates (top and bottom)
+      ['top', 'bottom'].forEach(plateType => {
+        const y = plateType === 'top' ? height - LUMBER_DIMENSIONS.plate.height / 24 : LUMBER_DIMENSIONS.plate.height / 24;
+        
+        for (let wall = 0; wall < 4; wall++) {
+          const isLongWall = wall % 2 === 0;
+          const plate = createLumber(
+            new THREE.Vector3(
+              isLongWall ? 0 : (wall === 1 ? width / 2 : -width / 2),
+              y,
+              isLongWall ? (wall === 0 ? -width / 2 : width / 2) : 0
+            ),
+            new THREE.Vector3(0, isLongWall ? 0 : Math.PI / 2, 0),
+            new THREE.Vector3(
+              isLongWall ? length : LUMBER_DIMENSIONS.plate.width / 12,
+              LUMBER_DIMENSIONS.plate.height / 12,
+              isLongWall ? LUMBER_DIMENSIONS.plate.width / 12 : width
+            ),
+            'plate'
+          );
+          scene.add(plate);
+        }
+      });
+
+      // Add beams (4ft spacing)
+      const beamSpacing = 48; // 4 feet in inches
+      for (let wall = 0; wall < 4; wall++) {
+        const isLongWall = wall % 2 === 0;
+        const wallLength = isLongWall ? length : width;
+        const beamCount = Math.ceil((wallLength * 12) / beamSpacing) + 1;
+
+        for (let i = 0; i < beamCount; i++) {
+          const x = isLongWall
+            ? i * (beamSpacing / 12) - length / 2
+            : (wall === 1 ? width / 2 : -width / 2);
+          const z = isLongWall
+            ? (wall === 0 ? -width / 2 : width / 2)
+            : i * (beamSpacing / 12) - width / 2;
+
+          const beam = createLumber(
+            new THREE.Vector3(x, height / 2, z),
+            new THREE.Vector3(0, isLongWall ? 0 : Math.PI / 2, 0),
+            new THREE.Vector3(
+              LUMBER_DIMENSIONS.beam.width / 12,
+              height,
+              LUMBER_DIMENSIONS.beam.height / 12
+            ),
+            'beam'
+          );
+          scene.add(beam);
+        }
+      }
+    }
+
+    // Initialize scene when switching to preview tab
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const tabId = tab.getAttribute('data-tab');
+        
+        document.querySelectorAll('.tab').forEach(t => {
+          t.classList.remove('active');
+        });
+        tab.classList.add('active');
+        
+        document.querySelectorAll('.tab-content').forEach(content => {
+          content.classList.remove('active');
+        });
+        document.getElementById(tabId).classList.add('active');
+        
+        if (tabId === 'preview') {
+          if (!scene) {
+            init();
+          }
+          updatePreview();
+        }
+      });
+    });
+
+    // Make updatePreview available globally
+    window.updatePreview = updatePreview;
+  </script>
+
+  <script>
+    function calculateMaterials() {
+      const length = parseFloat(document.getElementById('length').value) || 0;
+      const width = parseFloat(document.getElementById('width').value) || 0;
+      const height = parseFloat(document.getElementById('height').value) || 0;
+      const studLength = parseFloat(document.getElementById('studLength').value) || 8;
+      const beamLength = parseFloat(document.getElementById('beamLength').value) || 8;
+
+      if (length <= 0 || width <= 0 || height <= 0) {
+        alert('Please enter valid dimensions greater than 0');
+        return;
+      }
+
+      if (height > 10) {
+        alert('Height cannot exceed 10 feet');
+        return;
+      }
+
+      const perimeter = 2 * (length + width);
+      const linearFeet = perimeter;
+      const beamsNeeded = Math.ceil(perimeter / beamLength);
+      const perimeterBeams = Math.ceil(perimeter / (2 * beamLength));
+      const totalBeams = beamsNeeded + perimeterBeams;
+      const studSpacing = 16 / 12;
+      const wallLength = perimeter;
+      const studsNeeded = Math.ceil(wallLength / studSpacing);
+      const platesNeeded = Math.ceil(perimeter / studLength) * 2;
+      const wallArea = perimeter * height;
+      const sheetrockSheetArea = 32;
+      const sheetrockNeeded = Math.ceil(wallArea / sheetrockSheetArea);
+
+      const studPrice = parseFloat(document.getElementById('studPrice').value) || 3.98;
+      const beamPrice = parseFloat(document.getElementById('beamPrice').value) || 12.98;
+      const sheetrockPrice = parseFloat(document.getElementById('sheetrockPrice').value) || 15.98;
+
+      const results = [
+        {
+          item: `2×4 Studs (16" spacing)`,
+          quantity: studsNeeded,
+          price: studPrice,
+          size: `2×4×${studLength}ft`
+        },
+        {
+          item: '2×4 Top Plates',
+          quantity: platesNeeded / 2,
+          price: studPrice,
+          size: `2×4×${studLength}ft`
+        },
+        {
+          item: '2×4 Bottom Plates',
+          quantity: platesNeeded / 2,
+          price: studPrice,
+          size: `2×4×${studLength}ft`
+        },
+        {
+          item: '2×6 Perimeter Beams (Double Layer)',
+          quantity: perimeterBeams * 2,
+          price: beamPrice,
+          size: `2×6×${beamLength}ft`,
+          note: 'Two 2×6 beams nailed and screwed together'
+        },
+        {
+          item: '2×6 Interior Support Beams (4ft spacing)',
+          quantity: Math.ceil((length / 4) + (width / 4)),
+          price: beamPrice,
+          size: `2×6×${beamLength}ft`,
+          note: 'Single 2×6 beams placed every 4 feet'
+        },
+        {
+          item: '4×8 Sheetrock Sheets',
+          quantity: sheetrockNeeded,
+          price: sheetrockPrice,
+          size: '4×8ft'
+        }
+      ];
+
+      displayResults(results);
+      window.updatePreview();
+    }
+
+    function displayResults(results) {
+      const resultsList = document.getElementById('resultsList');
+      const resultsDiv = document.getElementById('results');
+      const totalCostDiv = document.getElementById('totalCost');
+      
+      resultsList.innerHTML = '';
+      let totalCost = 0;
+
+      results.forEach(result => {
+        const cost = result.quantity * result.price;
+        totalCost += cost;
+        
+        const div = document.createElement('div');
+        div.className = 'results-item';
+        div.innerHTML = `
+          <div>
+            <span>${result.item}: ${result.quantity} pieces (${result.size})</span>
+            ${result.note ? `<br><span style="color: #9ca3af; font-size: 0.875rem;">${result.note}</span>` : ''}
+          </div>
+          <div style="color: #dc2626; margin-top: 0.25rem;">$${cost.toFixed(2)} ($${result.price.toFixed(2)}/piece)</div>
+        `;
+        resultsList.appendChild(div);
+      });
+
+      totalCostDiv.textContent = `Total Cost: $${totalCost.toFixed(2)}`;
+      resultsDiv.classList.add('active');
+    }
+
+    // Add Enter key support for inputs
+    document.querySelectorAll('input').forEach(input => {
+      input.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          calculateMaterials();
+        }
+      });
+    });
+  </script>
+</body>
+</html>
