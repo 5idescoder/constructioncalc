@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>3D Builder</title>
+    <link rel="stylesheet" href="./css/styles.css">
+</head>
+<body>
+    <div class="tab-container">
+        <div class="tab-header">
+            <button class="tab-button active" data-tab="welcome">Welcome</button>
+            <button class="tab-button" data-tab="builder">3D Builder</button>
+            <button class="tab-button" data-tab="ai">AI Assistant</button>
+        </div>
+        
+        <div class="tab-content">
+            <div id="welcome-tab" class="tab-panel active">
+                <div class="welcome-container">
+                    <h1>Welcome to 3D Builder</h1>
+                    <div class="toolbox">
+                        <h2>🧰 Available Tools</h2>
+                        <div class="tool-items">
+                            <div class="tool-item" data-tool="transform">
+                                <span class="tool-icon">📐</span>
+                                <h3>Transform</h3>
+                                <p>Modify position, rotation, and scale</p>
+                            </div>
+                            <div class="tool-item" data-tool="materials">
+                                <span class="tool-icon">🎨</span>
+                                <h3>Materials</h3>
+                                <p>Customize colors and surfaces</p>
+                            </div>
+                            <div class="tool-item" data-tool="settings">
+                                <span class="tool-icon">⚙️</span>
+                                <h3>Settings</h3>
+                                <p>Adjust grid and environment</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="builder-tab" class="tab-panel">
+                <div id="scene-container"></div>
+                <button class="toolbox-button">🧰</button>
+            </div>
+
+            <div id="ai-tab" class="tab-panel">
+                <div class="ai-container">
+                    <div class="chat-area">
+                        <div class="message ai">
+                            Hello! I'm your 3D modeling assistant. How can I help you today?
+                        </div>
+                    </div>
+                    <div class="input-area">
+                        <textarea class="chat-input" placeholder="Ask me about 3D modeling..."></textarea>
+                        <button class="send-button">Send</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script async src="https://unpkg.com/es-module-shims/dist/es-module-shims.js"></script>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.159.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.159.0/examples/jsm/",
+            "three/examples/": "https://unpkg.com/three@0.159.0/examples/"
+        }
+    }
+    </script>
+    <script type="module" src="./js/Scene3D.js"></script>
+    <script type="module" src="./js/UI.js"></script>
+</body>
+</html>

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>3D Builder</title>
+    <style>
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #2b1717 0%, #1a0f0f 50%, #8b0000 100%);
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        .sidebar {
+            width: 300px;
+            background: #1a1a1a;
+            padding: 1rem;
+            color: #e5e7eb;
+            border-right: 1px solid rgba(139, 0, 0, 0.2);
+            overflow-y: auto;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .viewport {
+            flex: 1;
+            position: relative;
+        }
+
+        .toolbar {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            z-index: 100;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .button, .shape-item {
+            padding: 0.5rem 1rem;
+            background: #374151;
+            color: #e5e7eb;
+            border: 1px solid rgba(139, 0, 0, 0.2);
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .button:hover, .shape-item:hover {
+            background: #8b0000;
+        }
+
+        .input-group {
+            margin-bottom: 1rem;
+        }
+
+        .label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #e5e7eb;
+        }
+
+        .input {
+            width: 100%;
+            padding: 0.75rem;
+            background: #374151;
+            border: 1px solid #4b5563;
+            color: #e5e7eb;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .input:focus {
+            outline: none;
+            border-color: #8b0000;
+            box-shadow: 0 0 0 2px rgba(139, 0, 0, 0.2);
+        }
+
+        .shape-list {
+            margin-top: 1rem;
+            border-top: 1px solid rgba(139, 0, 0, 0.2);
+            padding-top: 1rem;
+        }
+
+        .shape-item.selected {
+            background: #8b0000;
+            border: 1px solid #dc2626;
+        }
+
+        h2, h3 {
+            color: #dc2626;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        #scene-container {
+            background: #1a1a1a;
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            padding: 1rem;
+            background: #1a1a1a;
+            border-bottom: 1px solid rgba(139, 0, 0, 0.2);
+        }
+
+        .tab {
+            padding: 0.5rem 1.5rem;
+            background: #374151;
+            color: #e5e7eb;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab:hover {
+            background: #8b0000;
+        }
+
+        .tab.active {
+            background: #8b0000;
+            border: 1px solid #dc2626;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div class="tabs">
+                <div class="tab active" data-tab="builder">Builder</div>
+                <div class="tab" data-tab="settings">Settings</div>
+            </div>
+            
+            <div id="builder" class="tab-content active">
+                <h2>Add Shape</h2>
+                <div class="input-group">
+                    <label class="label">Shape Type</label>
+                    <select id="shapeType" class="input">
+                        <option value="box">Box</option>
+                        <option value="sphere">Sphere</option>
+                        <option value="cylinder">Cylinder</option>
+                        <option value="cone">Cone</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label class="label">Color</label>
+                    <input type="color" id="shapeColor" class="input" value="#ff0000">
+                </div>
+                <div class="input-group">
+                    <label class="label">Scale X</label>
+                    <input type="number" id="scaleX" class="input" value="1" step="0.1">
+                </div>
+                <div class="input-group">
+                    <label class="label">Scale Y</label>
+                    <input type="number" id="scaleY" class="input" value="1" step="0.1">
+                </div>
+                <div class="input-group">
+                    <label class="label">Scale Z</label>
+                    <input type="number" id="scaleZ" class="input" value="1" step="0.1">
+                </div>
+                <button id="addShape" class="button interactive">Add Shape</button>
+                
+                <div class="shape-list" id="shapeList">
+                    <h3>Shapes</h3>
+                </div>
+            </div>
+
+            <div id="settings" class="tab-content">
+                <h2>Settings</h2>
+                <div class="input-group">
+                    <label class="label">Grid Size</label>
+                    <input type="number" id="gridSize" class="input" value="20" min="5" max="50">
+                </div>
+                <div class="input-group">
+                    <label class="label">Grid Divisions</label>
+                    <input type="number" id="gridDivisions" class="input" value="20" min="5" max="50">
+                </div>
+                <div class="input-group">
+                    <label class="label">Background Color</label>
+                    <input type="color" id="backgroundColor" class="input" value="#1a1a1a">
+                </div>
+            </div>
+        </div>
+        
+        <div class="viewport">
+            <div class="toolbar">
+                <button id="resetCamera" class="button interactive">Reset Camera</button>
+                <button id="deleteSelected" class="button interactive">Delete Selected</button>
+            </div>
+            <div id="scene-container"></div>
+        </div>
+    </div>
+
+    <script type="module" src="../dist/builder.js"></script>
+</body>
+</html>

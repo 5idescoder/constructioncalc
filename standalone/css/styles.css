@@ -1,0 +1,162 @@
+/* Base styles */
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(135deg, #2b1717 0%, #1a0f0f 50%, #8b0000 100%);
+    font-family: system-ui, -apple-system, sans-serif;
+    color: #e5e7eb;
+}
+
+/* Remove duplicate body styles */
+body {
+    overflow: hidden; /* Prevent scrolling on main container */
+}
+
+/* Layout */
+.tab-container {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: #1a1a1a;
+}
+
+.tab-header {
+    display: flex;
+    padding: 1rem;
+    gap: 0.5rem;
+    background: rgba(0, 0, 0, 0.2);
+    border-bottom: 1px solid rgba(139, 0, 0, 0.2);
+}
+
+/* Fix class name to match HTML */
+.tab-button {
+    padding: 0.75rem 1.5rem;
+    background: transparent;
+    color: #9ca3af;
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.tab-button:hover {
+    color: #e5e7eb;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.tab-button.active {
+    color: #dc2626;
+    background: rgba(139, 0, 0, 0.2);
+}
+
+.tab-content {
+    flex: 1;
+    position: relative;
+    overflow: hidden; /* Contain 3D scene */
+}
+
+.tab-panel {
+    display: none;
+    height: 100%;
+}
+
+.tab-panel.active {
+    display: block;
+}
+
+#scene-container {
+    width: 100%;
+    height: 100%;
+    background: #1a1a1a;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+#builder-tab {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    padding: 0; /* Remove padding for full coverage */
+}
+
+.toolbox-button {
+    position: absolute;
+    left: 1rem;
+    bottom: 1rem;
+    z-index: 100;
+    /* ...existing button styles... */
+}
+
+/* Welcome page styles */
+.welcome-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background: rgba(26, 26, 26, 0.9);
+    border-radius: 1rem;
+    text-align: center;
+}
+
+/* Toolbox styles */
+.toolbox {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: rgba(43, 23, 23, 0.9);
+    border-radius: 0.75rem;
+    border: 1px solid #8b0000;
+}
+
+.tool-items {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.tool-item {
+    background: rgba(55, 65, 81, 0.3);
+    padding: 1rem;
+    border-radius: 0.5rem;
+    border: 1px solid rgba(139, 0, 0, 0.2);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.tool-item:hover {
+    background: rgba(139, 0, 0, 0.2);
+    transform: translateY(-2px);
+}
+
+/* Control bubbles */
+.control-bubble {
+    position: absolute;
+    background: rgba(26, 26, 26, 0.95);
+    border: 1px solid #8b0000;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    color: #e5e7eb;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(4px);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #1a1a1a;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #8b0000;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #dc2626;
+}
