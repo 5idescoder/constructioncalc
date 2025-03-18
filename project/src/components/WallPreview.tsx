@@ -43,6 +43,91 @@ const LUMBER_DIMENSIONS = {
   door: { width: 3, height: 6.67 },    // Standard door size (3x6'8")
 };
 
+class Lumber {
+  constructor(public position: Vector3, public rotation: Vector3, public dimensions: Vector3, public type: MaterialType, public id: string) {}
+
+  static generateId() {
+    return Math.random().toString(36).substring(2, 11);
+  }
+
+  static createLumberPieces(length: number, width: number, height: number) {
+    const newLumber: LumberPiece[] = [];
+
+    // Add floor joists (24" spacing - 2 feet)
+    const joistSpacing = 24; // 2 feet in inches
+    const joistCount = Math.ceil((width * 12) / joistSpacing) + 1;
+    for (let i = 0; i < joistCount; i++) {
+      const z = i * (joistSpacing / 12) - width / 2;
+      newLumber.push(new Lumber(
+        new Vector3(0, LUMBER_DIMENSIONS.joist.height / 24, z),
+        new Vector3(0, 0, 0),
+        new Vector3(length, LUMBER_DIMENSIONS.joist.height / 12, LUMBER_DIMENSIONS.joist.width / 12),
+        'joist',
+        Lumber.generateId()
+      ));
+    }
+
+    // Add wall studs (24" spacing - 2 feet)
+    const studSpacing = 24; // 2 feet in inches
+    for (let wall = 0; wall < 4; wall++) {
+      const isLongWall = wall % 2 === 0;
+      const wallLength = isLongWall ? length : width;
+      const studCount = Math.ceil((wallLength * 12) / studSpacing) + 1;
+
+      for (let i = 0; i < studCount; i++) {
+        const x = isLongWall ? i * (studSpacing / 12) - length / 2 : (wall === 1 ? width / 2 : -width / 2);
+        const z = isLongWall ? (wall === 0 ? -width / 2 : width / 2) : i * (studSpacing / 12) - width / 2;
+
+        newLumber.push(new Lumber(
+          new Vector3(x, height / 2, z),
+          new Vector3(0, isLongWall ? 0 : Math.PI / 2, 0),
+          new Vector3(LUMBER_DIMENSIONS.stud.width / 12, height, LUMBER_DIMENSIONS.stud.height / 12),
+          'stud',
+          Lumber.generateId()
+        ));
+      }
+    }
+
+    // Add plates (top and bottom)
+    ['top', 'bottom'].forEach(plateType => {
+      const y = plateType === 'top' ? height - LUMBER_DIMENSIONS.plate.height / 24 : LUMBER_DIMENSIONS.plate.height / 24;
+      for (let wall = 0; wall < 4; wall++) {
+        const isLongWall = wall % 2 === 0;
+        newLumber.push(new Lumber(
+          new Vector3(isLongWall ? 0 : (wall === 1 ? width / 2 : -width / 2), y, isLongWall ? (wall === 0 ? -width / 2 : width / 2) : 0),
+          new Vector3(0, isLongWall ? 0 : Math.PI / 2, 0),
+          new Vector3(isLongWall ? length : LUMBER_DIMENSIONS.plate.width / 12, LUMBER_DIMENSIONS.plate.height / 12, isLongWall ? LUMBER_DIMENSIONS.plate.width / 12 : width),
+          'plate',
+          Lumber.generateId()
+        ));
+      }
+    });
+
+    // Add beams (4ft spacing)
+    const beamSpacing = 48; // 4 feet in inches
+    for (let wall = 0; wall < 4; wall++) {
+      const isLongWall = wall % 2 === 0;
+      const wallLength = isLongWall ? length : width;
+      const beamCount = Math.ceil((wallLength * 12) / beamSpacing) + 1;
+
+      for (let i = 0; i < beamCount; i++) {
+        const x = isLongWall ? i * (beamSpacing / 12) - length / 2 : (wall === 1 ? width / 2 : -width / 2);
+        const z = isLongWall ? (wall === 0 ? -width / 2 : width / 2) : i * (beamSpacing / 12) - width / 2;
+
+        newLumber.push(new Lumber(
+          new Vector3(x, height / 2, z),
+          new Vector3(0, isLongWall ? 0 : Math.PI / 2, 0),
+          new Vector3(LUMBER_DIMENSIONS.beam.width / 12, height, LUMBER_DIMENSIONS.beam.height / 12),
+          'beam',
+          Lumber.generateId()
+        ));
+      }
+    }
+
+    return newLumber;
+  }
+}
+
 export function WallPreview({ length = 0, width = 0, height = 0, doors, windows, updateDoor, updateWindow }: WallPreviewProps) {
   const groupRef = useRef<Group>(null);
   const [lumber, setLumber] = useState<LumberPiece[]>([]);
@@ -52,32 +137,22 @@ export function WallPreview({ length = 0, width = 0, height = 0, doors, windows,
   const [openings, setOpenings] = useState<LumberPiece[]>([]);
   const [placementMode, setPlacementMode] = useState<'wall' | 'window' | 'door'>('wall');
 
-  const generateId = () => Math.random().toString(36).substring(2, 11); // Updated method
-
   const handleStudClick = (studId: string) => {
     const stud = lumber.find(piece => piece.id === studId && piece.type === 'stud');
     if (!stud) return;
 
     if (placementMode === 'wall') {
       setSelectedStud(studId);
-      const wallId = generateId();
+      const wallId = Lumber.generateId();
       const wallHeight = height;
       const wallWidth = 8; // 8 feet wide wall section
       const wallThickness = LUMBER_DIMENSIONS.wall.width / 12;
 
       const wallPiece: LumberPiece = {
         id: wallId,
-        position: new Vector3(
-          stud.position.x,
-          wallHeight / 2,
-          stud.position.z
-        ),
+        position: new Vector3(stud.position.x, wallHeight / 2, stud.position.z),
         rotation: stud.rotation,
-        dimensions: new Vector3(
-          wallThickness,
-          wallHeight,
-          wallWidth
-        ),
+        dimensions: new Vector3(wallThickness, wallHeight, wallWidth),
         type: 'wall'
       };
 
@@ -90,18 +165,10 @@ export function WallPreview({ length = 0, width = 0, height = 0, doors, windows,
       const openingWidth = openingDimensions.width;
       
       const openingPiece: LumberPiece = {
-        id: generateId(),
-        position: new Vector3(
-          stud.position.x,
-          openingType === 'door' ? openingHeight / 2 : height / 2,
-          stud.position.z
-        ),
+        id: Lumber.generateId(),
+        position: new Vector3(stud.position.x, openingType === 'door' ? openingHeight / 2 : height / 2, stud.position.z),
         rotation: stud.rotation,
-        dimensions: new Vector3(
-          0.5, // Thickness
-          openingHeight,
-          openingWidth
-        ),
+        dimensions: new Vector3(0.5, openingHeight, openingWidth),
         type: openingType
       };
 
@@ -109,112 +176,36 @@ export function WallPreview({ length = 0, width = 0, height = 0, doors, windows,
     }
   };
 
+  const handleMeshPointerMove = (e: any, index: number, type: 'door' | 'window') => {
+    const { x, y } = e.point;
+    if (type === 'door') {
+      updateDoor(index, { ...doors[index], x, y });
+    } else if (type === 'window') {
+      updateWindow(index, { ...windows[index], x, y });
+    }
+  };
+
+  const handleMeshPointerDown = (e: any, index: number, type: 'door' | 'window') => {
+    const { x, y } = e.point;
+    if (type === 'door') {
+      updateDoor(index, { ...doors[index], x, y });
+    } else if (type === 'window') {
+      updateWindow(index, { ...windows[index], x, y });
+    }
+  };
+
+  const handleMeshPointerUp = (e: any, index: number, type: 'door' | 'window') => {
+    const { x, y } = e.point;
+    if (type === 'door') {
+      updateDoor(index, { ...doors[index], x, y });
+    } else if (type === 'window') {
+      updateWindow(index, { ...windows[index], x, y });
+    }
+  };
+
   useEffect(() => {
     if (length <= 0 || width <= 0 || height <= 0) return;
-
-    const newLumber: LumberPiece[] = [];
-
-    // Add floor joists (24" spacing - 2 feet)
-    const joistSpacing = 24; // 2 feet in inches
-    const joistCount = Math.ceil((width * 12) / joistSpacing) + 1;
-    for (let i = 0; i < joistCount; i++) {
-      const z = i * (joistSpacing / 12) - width / 2;
-      newLumber.push({
-        id: generateId(),
-        position: new Vector3(0, LUMBER_DIMENSIONS.joist.height / 24, z),
-        rotation: new Vector3(0, 0, 0),
-        dimensions: new Vector3(
-          length,
-          LUMBER_DIMENSIONS.joist.height / 12,
-          LUMBER_DIMENSIONS.joist.width / 12
-        ),
-        type: 'joist'
-      });
-    }
-
-    // Add wall studs (24" spacing - 2 feet)
-    const studSpacing = 24; // 2 feet in inches
-    for (let wall = 0; wall < 4; wall++) {
-      const isLongWall = wall % 2 === 0;
-      const wallLength = isLongWall ? length : width;
-      const studCount = Math.ceil((wallLength * 12) / studSpacing) + 1;
-
-      for (let i = 0; i < studCount; i++) {
-        const x = isLongWall
-          ? i * (studSpacing / 12) - length / 2
-          : (wall === 1 ? width / 2 : -width / 2);
-        const z = isLongWall
-          ? (wall === 0 ? -width / 2 : width / 2)
-          : i * (studSpacing / 12) - width / 2;
-
-        newLumber.push({
-          id: generateId(),
-          position: new Vector3(x, height / 2, z),
-          rotation: new Vector3(0, isLongWall ? 0 : Math.PI / 2, 0),
-          dimensions: new Vector3(
-            LUMBER_DIMENSIONS.stud.width / 12,
-            height,
-            LUMBER_DIMENSIONS.stud.height / 12
-          ),
-          type: 'stud'
-        });
-      }
-    }
-
-    // Add plates (top and bottom)
-    ['top', 'bottom'].forEach(plateType => {
-      const y = plateType === 'top' ? height - LUMBER_DIMENSIONS.plate.height / 24 : LUMBER_DIMENSIONS.plate.height / 24;
-      
-      for (let wall = 0; wall < 4; wall++) {
-        const isLongWall = wall % 2 === 0;
-        newLumber.push({
-          id: generateId(),
-          position: new Vector3(
-            isLongWall ? 0 : (wall === 1 ? width / 2 : -width / 2),
-            y,
-            isLongWall ? (wall === 0 ? -width / 2 : width / 2) : 0
-          ),
-          rotation: new Vector3(0, isLongWall ? 0 : Math.PI / 2, 0),
-          dimensions: new Vector3(
-            isLongWall ? length : LUMBER_DIMENSIONS.plate.width / 12,
-            LUMBER_DIMENSIONS.plate.height / 12,
-            isLongWall ? LUMBER_DIMENSIONS.plate.width / 12 : width
-          ),
-          type: 'plate'
-        });
-      }
-    });
-
-    // Add beams (4ft spacing)
-    const beamSpacing = 48; // 4 feet in inches
-    for (let wall = 0; wall < 4; wall++) {
-      const isLongWall = wall % 2 === 0;
-      const wallLength = isLongWall ? length : width;
-      const beamCount = Math.ceil((wallLength * 12) / beamSpacing) + 1;
-
-      for (let i = 0; i < beamCount; i++) {
-        const x = isLongWall
-          ? i * (beamSpacing / 12) - length / 2
-          : (wall === 1 ? width / 2 : -width / 2);
-        const z = isLongWall
-          ? (wall === 0 ? -width / 2 : width / 2)
-          : i * (beamSpacing / 12) - width / 2;
-
-        newLumber.push({
-          id: generateId(),
-          position: new Vector3(x, height / 2, z),
-          rotation: new Vector3(0, isLongWall ? 0 : Math.PI / 2, 0),
-          dimensions: new Vector3(
-            LUMBER_DIMENSIONS.beam.width / 12,
-            height,
-            LUMBER_DIMENSIONS.beam.height / 12
-          ),
-          type: 'beam'
-        });
-      }
-    }
-
-    setLumber(newLumber);
+    setLumber(Lumber.createLumberPieces(length, width, height));
   }, [length, width, height]);
 
   useFrame(() => {
@@ -250,7 +241,7 @@ export function WallPreview({ length = 0, width = 0, height = 0, doors, windows,
 
       <Canvas>
         <PerspectiveCamera makeDefault position={[50, 50, 50]} />
-        <OrbitControls enableDamping dampingFactor={0.05} />
+        <OrbitControls />
         
         <group ref={groupRef}>
           <ambientLight intensity={0.7} />
@@ -323,10 +314,9 @@ export function WallPreview({ length = 0, width = 0, height = 0, doors, windows,
             <mesh
               key={index}
               position={[door.x, door.y, 0]}
-              onPointerMove={(e) => {
-                const { x, y } = e.point;
-                updateDoor(index, { ...door, x, y });
-              }}
+              onPointerMove={(e) => handleMeshPointerMove(e, index, 'door')}
+              onPointerDown={(e) => handleMeshPointerDown(e, index, 'door')}
+              onPointerUp={(e) => handleMeshPointerUp(e, index, 'door')}
             >
               <boxGeometry args={[door.width, door.height, 10]} />
               <meshStandardMaterial color="brown" />
@@ -338,10 +328,9 @@ export function WallPreview({ length = 0, width = 0, height = 0, doors, windows,
             <mesh
               key={index}
               position={[window.x, window.y, 0]}
-              onPointerMove={(e) => {
-                const { x, y } = e.point;
-                updateWindow(index, { ...window, x, y });
-              }}
+              onPointerMove={(e) => handleMeshPointerMove(e, index, 'window')}
+              onPointerDown={(e) => handleMeshPointerDown(e, index, 'window')}
+              onPointerUp={(e) => handleMeshPointerUp(e, index, 'window')}
             >
               <boxGeometry args={[window.width, window.height, 10]} />
               <meshStandardMaterial color="blue" />
